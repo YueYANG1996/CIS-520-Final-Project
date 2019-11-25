@@ -137,6 +137,45 @@ def detect_objects(model, img, iou_thresh, nms_thresh):
     
     return boxes
 
+def get_hidden_layer(model, img, iou_thresh, nms_thresh):
+    
+    # Start the time. This is done to calculate how long the detection takes.
+    start = time.time()
+    
+    # Set the model to evaluation mode.
+    model.eval()
+    
+    # Convert the image from a NumPy ndarray to a PyTorch Tensor of the correct shape.
+    # The image is transposed, then converted to a FloatTensor of dtype float32, then
+    # Normalized to values between 0 and 1, and finally unsqueezed to have the correct
+    # shape of 1 x 3 x 416 x 416
+    img = torch.from_numpy(img.transpose(2,0,1)).float().div(255.0).unsqueeze(0)
+    
+    # Feed the image to the neural network with the corresponding NMS threshold.
+    # The first step in NMS is to remove all bounding boxes that have a very low
+    # probability of detection. All predicted bounding boxes with a value less than
+    # the given NMS threshold will be removed.
+    list_boxes = model(img, nms_thresh, hidden_layer=True)
+    print(list_boxes)
+    # Make a new list with all the bounding boxes returned by the neural network
+    #boxes = list_boxes[0][0] + list_boxes[1][0] + list_boxes[2][0]
+    
+    # Perform the second step of NMS on the bounding boxes returned by the neural network.
+    # In this step, we only keep the best bounding boxes by eliminating all the bounding boxes
+    # whose IOU value is higher than the given IOU threshold
+    #boxes = nms(boxes, iou_thresh)
+    
+    # Stop the time. 
+    finish = time.time()
+    
+    # Print the time it took to detect objects
+    print('\n\nIt took {:.3f}'.format(finish - start), 'seconds to detect the objects in the image.\n')
+    
+    # Print the number of objects detected
+    #print('Number of Objects Detected:', len(boxes), '\n')
+    
+    return list_boxes
+
 
 def load_class_names(namesfile):
     

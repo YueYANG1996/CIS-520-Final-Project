@@ -71,11 +71,13 @@ class Darknet(nn.Module):
         self.header = torch.IntTensor([0,0,0,0])
         self.seen = 0
 
-    def forward(self, x, nms_thresh):            
+    def forward(self, x, nms_thresh, hidden_layer=False):            
         ind = -2
         self.loss = None
         outputs = dict()
         out_boxes = []
+
+        last_ind = -1
         
         for block in self.blocks:
             ind = ind + 1
@@ -84,6 +86,7 @@ class Darknet(nn.Module):
             elif block['type'] in ['convolutional', 'upsample']: 
                 x = self.models[ind](x)
                 outputs[ind] = x
+                last_ind = ind
             elif block['type'] == 'route':
                 layers = block['layers'].split(',')
                 layers = [int(i) if int(i) > 0 else int(i)+ind for i in layers]
@@ -95,6 +98,7 @@ class Darknet(nn.Module):
                     x2 = outputs[layers[1]]
                     x = torch.cat((x1,x2),1)
                     outputs[ind] = x
+                    last_ind = ind
             elif block['type'] == 'shortcut':
                 from_layer = int(block['from'])
                 activation = block['activation']
@@ -103,12 +107,14 @@ class Darknet(nn.Module):
                 x2 = outputs[ind-1]
                 x  = x1 + x2
                 outputs[ind] = x
+                last_ind = ind
             elif block['type'] == 'yolo':
                 boxes = self.models[ind](x, nms_thresh)
                 out_boxes.append(boxes)
             else:
                 print('unknown type %s' % (block['type']))
-            
+        if hidden_layer:
+            return outputs[last_ind]
         return out_boxes
     
 
