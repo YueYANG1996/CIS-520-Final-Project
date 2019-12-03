@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from utils import *
 from darknet import Darknet
 from PIL import Image
+import numpy as np
 
 cfg_file = './YOLO/cfg/yolov3.cfg'
 weight_file = './YOLO/weights/yolov3.weights'
@@ -44,7 +45,9 @@ for i in range(3):
         resized_image = cv2.resize(original_image, (m.width, m.height))
         nms_thresh = 0.6
         iou_thresh = 0.4
-        hidden = get_hidden_layer(m, resized_image, iou_thresh, nms_thresh).detach().cpu().numpy()[0]
+        hidden = get_hidden_layer(m, resized_image, iou_thresh, nms_thresh).view(689520, -1).squeeze(1)
+        hidden = hidden.detach().cpu().numpy()
+        print(hidden.shape)
         img_dicts[i][image_name] = hidden
         if idx % 100 == 0:
             log.write("\t" + str(idx / total) + "\n")
