@@ -156,7 +156,7 @@ def get_hidden_layer(model, img, iou_thresh, nms_thresh):
     # probability of detection. All predicted bounding boxes with a value less than
     # the given NMS threshold will be removed.
     list_boxes = model(img, nms_thresh, hidden_layer=True)
-    print(list_boxes)
+    #print(list_boxes)
     # Make a new list with all the bounding boxes returned by the neural network
     #boxes = list_boxes[0][0] + list_boxes[1][0] + list_boxes[2][0]
     
@@ -169,7 +169,7 @@ def get_hidden_layer(model, img, iou_thresh, nms_thresh):
     finish = time.time()
     
     # Print the time it took to detect objects
-    print('\n\nIt took {:.3f}'.format(finish - start), 'seconds to detect the objects in the image.\n')
+    #print('\n\nIt took {:.3f}'.format(finish - start), 'seconds to detect the objects in the image.\n')
     
     # Print the number of objects detected
     #print('Number of Objects Detected:', len(boxes), '\n')

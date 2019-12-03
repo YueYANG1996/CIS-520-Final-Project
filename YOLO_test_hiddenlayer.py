@@ -1,4 +1,5 @@
 import sys
+import datetime
 sys.path.append("./YOLO/")
 import pickle
 import torch
@@ -12,6 +13,7 @@ import numpy as np
 cfg_file = './YOLO/cfg/yolov3.cfg'
 weight_file = './YOLO/weights/yolov3.weights'
 namesfile = './YOLO/data/coco.names'
+
 
 m = Darknet(cfg_file)
 m.load_weights(weight_file)
@@ -28,8 +30,8 @@ val_images_file = './Flickr8k/Flickr8k_text/Flickr_8k.devImages.txt'
 train_img = list(open(train_images_file, 'r').read().strip().split('\n'))
 test_img = list(open(test_images_file, 'r').read().strip().split('\n'))
 val_img = list(open(val_images_file, 'r').read().strip().split('\n'))
-filenames = ["train", "val", "test"]
-img_sets = [train_img, val_img, test_img]
+filenames = ["test", "val", "train"]
+img_sets = [test_img, val_img, train_img]
 img_dicts = [{}, {}, {}]
 
 log = open("logfile.txt", "w")
@@ -38,6 +40,7 @@ for i in range(3):
     img_set = img_sets[i]
     log.write("------Beginning "+filenames[i]+"--------\n")
     log.flush()
+    hiddenlayer_file = open(filenames[i]+"_hiddenweights.txt", 'w')
     total = len(img_set)
     for idx, image_name in enumerate(img_set):
         img = np.array(Image.open("./Flickr8k/Flicker8k_Dataset/" + image_name))
@@ -47,11 +50,15 @@ for i in range(3):
         iou_thresh = 0.4
         hidden = get_hidden_layer(m, resized_image, iou_thresh, nms_thresh).view(689520, -1).squeeze(1)
         hidden = hidden.detach().cpu().numpy()
-        print(hidden.shape)
-        img_dicts[i][image_name] = hidden
+        #img_dicts[i][image_name] = hidden
+
+        hiddenlayer_file.write(image_name + " " + " ".join([str(x) for x in hidden]) + '\n')
+        hiddenlayer_file.flush()
         if idx % 100 == 0:
-            log.write("\t" + str(idx / total) + "\n")
+            log.write(str(datetime.datetime.now()) + "\t" + str(idx / total) + "\n")
             log.flush()
 
-    with open(filenames[i]+"_hidden.pickle", 'wb') as handle:
-        pickle.dump(img_dicts[i], handle, protocol=pickle.HIGHEST_PROTOCOL)
+    hiddenlayer_file.close()
+
+    #with open(filenames[i]+"_hidden.pickle", 'wb') as handle:
+    #    pickle.dump(img_dicts[i], handle, protocol=pickle.HIGHEST_PROTOCOL)
